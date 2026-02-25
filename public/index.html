@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse Medical Tower - EPa</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="ghid-body">
+
+    <div id="custom-edit-overlay" class="edit-overlay" style="display: none;">
+        <div class="edit-modal">
+            <h3 id="edit-title">MODIFICARE DATE</h3>
+            <div class="input-group">
+                <input type="text" id="edit-input" placeholder="Introdu valoarea nouă...">
+            </div>
+            <div class="edit-actions">
+                <button class="edit-btn-cancel" onclick="closeEdit()">ANULEAZĂ</button>
+                <button class="edit-btn-save" id="save-edit-btn">SALVEAZĂ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clockout-overlay" class="edit-overlay" style="display: none;">
+        <div class="edit-modal" style="border-color: #ff4d4d; box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);">
+            <h3 style="color: #ff4d4d;">SUMAR FINAL TURĂ</h3>
+            <div class="summary-details" style="margin: 20px 0; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
+                <p id="summary-start" style="margin: 5px 0; color: #ccc;">START: --:--</p>
+                <p id="summary-final" style="margin: 5px 0; color: #ccc;">FINAL: --:--</p>
+                <p id="summary-total" style="margin: 10px 0; color: #fff; font-weight: 800; font-size: 1.1rem; border-top: 1px solid #444; padding-top: 10px;">TOTAL: 0 minute</p>
+            </div>
+            <div class="edit-actions">
+                <button class="edit-btn-cancel" onclick="closeClockOut()">ANULEAZĂ</button>
+                <button class="edit-btn-save" id="confirm-clockout-btn" style="background: #ff4d4d;">ÎNCHIDE TURA</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-ui">
+        <nav class="navbar-capsule">
+            <div class="nav-content">
+                <button onclick="showSection('generate')">GENEREAZĂ EPA</button>
+                <button onclick="showSection('rules')">REGULAMENT</button>
+                <button onclick="showSection('map')">HARTĂ</button>
+                <button onclick="showSection('active')" class="btn-active">EPA ACTIVE</button>
+            </div>
+        </nav>
+
+        <main class="main-wrapper">
+            <section class="content-area">
+                
+                <div id="section-generate" class="glass-panel section-content" style="display:none;">
+                    <header class="panel-header">
+                        <div class="dot orange"></div>
+                        <h2 id="generator-title">🚑 GESTIONARE ECHIPAJ EPA</h2>
+                    </header>
+                    
+                    <div id="epa-creation-form" class="epa-form">
+                        <div class="input-group">
+                            <label>Callsign Creator (Tu)</label>
+                            <div class="prefix-input"><span>M-</span><input type="number" id="creator-id" placeholder="102"></div>
+                        </div>
+                        <div class="input-group">
+                            <label>Callsigns Parteneri (Maxim 2)</label>
+                            <div class="prefix-input"><span>M-</span><input type="text" id="partners-ids" placeholder="303, 605"></div>
+                        </div>
+                        <div class="dual-input">
+                            <div class="input-group">
+                                <label>Zonă Activitate</label>
+                                <select id="zone-select" class="custom-select">
+                                    <option value="Zona 1">ZONA 1</option>
+                                    <option value="Zona 2">ZONA 2</option>
+                                    <option value="Zona 3">ZONA 3</option>
+                                    <option value="Zona 4">ZONA 4</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Ora Start (Auto)</label>
+                                <input type="text" id="start-time-display" class="custom-select" placeholder="Ora se pune automat" disabled>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Vehicul Alocat</label>
+                            <select id="vehicle-select" class="custom-select">
+                                <option value="Bravado Ambulance">Bravado Ambulance</option>
+                                <option value="Vapid Speedo">Vapid Speedo</option>
+                                <option value="Brute Ambulance">Brute Ambulance</option>
+                            </select>
+                        </div>
+                        <button class="submit-btn" onclick="generateEPA()">LANSEAZĂ ECHIPAJ</button>
+                    </div>
+
+                    <div id="epa-active-control" style="display: none;">
+                        <div class="control-grid">
+                            <div class="control-item">
+                                <div class="item-label"><span>📍 ZONĂ</span><span class="edit-icon" onclick="editField('zone')">✏️</span></div>
+                                <div id="display-zone" class="data-display">---</div>
+                            </div>
+                            <div class="control-item">
+                                <div class="item-label"><span>🚑 VEHICUL</span><span class="edit-icon" onclick="editField('vehicle')">✏️</span></div>
+                                <div id="display-vehicle" class="data-display">---</div>
+                            </div>
+                            <div class="control-item">
+                                <div class="item-label"><span>👥 PARTENERI</span><span class="edit-icon" onclick="editField('partners')">✏️</span></div>
+                                <div id="display-partners" class="data-display">---</div>
+                            </div>
+                        </div>
+                        <div class="observations-box">
+                            <label>📝 JURNAL ACTIVITATE</label>
+                            <div id="log-container" class="log-list"></div>
+                        </div>
+                        <button class="delete-btn" onclick="confirmClockOut()">OPREȘTE EPA / CLOCK-OUT</button>
+                    </div>
+                </div>
+
+                <div id="section-active" class="glass-panel section-content">
+                    <header class="panel-header">
+                        <div class="dot green"></div>
+                        <h2>📡 RADAR ECHIPAJE ACTIVE</h2>
+                    </header>
+                    <div id="epa-list" class="epa-grid"></div>
+                </div>
+
+                </section>
+        </main>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
