@@ -9,11 +9,18 @@
 </head>
 <body class="ghid-body">
 
+    <audio id="alert-sound" src="alert.mp3" preload="auto"></audio>
+
     <div id="custom-edit-overlay" class="edit-overlay" style="display: none;">
         <div class="edit-modal">
             <h3 id="edit-title">MODIFICARE DATE</h3>
             <div class="input-group">
+                <label>Valoare Nouă</label>
                 <input type="text" id="edit-input" placeholder="Introdu valoarea nouă...">
+            </div>
+            <div class="input-group">
+                <label>Motivul Modificării</label>
+                <input type="text" id="edit-reason" placeholder="Ex: Redislocare / Pană vehicul">
             </div>
             <div class="edit-actions">
                 <button class="edit-btn-cancel" onclick="closeEdit()">ANULEAZĂ</button>
@@ -23,12 +30,12 @@
     </div>
 
     <div id="clockout-overlay" class="edit-overlay" style="display: none;">
-        <div class="edit-modal" style="border-color: #ff4d4d; box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);">
+        <div class="edit-modal" style="border-color: #ff4d4d;">
             <h3 style="color: #ff4d4d;">SUMAR FINAL TURĂ</h3>
-            <div class="summary-details" style="margin: 20px 0; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
-                <p id="summary-start" style="margin: 5px 0; color: #ccc;">START: --:--</p>
-                <p id="summary-final" style="margin: 5px 0; color: #ccc;">FINAL: --:--</p>
-                <p id="summary-total" style="margin: 10px 0; color: #fff; font-weight: 800; font-size: 1.1rem; border-top: 1px solid #444; padding-top: 10px;">TOTAL: 0 minute</p>
+            <div id="summary-content" class="summary-details" style="margin: 20px 0; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
+                <p id="summary-start">START: --:--</p>
+                <p id="summary-final">FINAL: --:--</p>
+                <p id="summary-total" style="font-weight: 800; color: #fff; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">TOTAL: 0 minute</p>
             </div>
             <div class="edit-actions">
                 <button class="edit-btn-cancel" onclick="closeClockOut()">ANULEAZĂ</button>
@@ -53,7 +60,7 @@
                 <div id="section-generate" class="glass-panel section-content" style="display:none;">
                     <header class="panel-header">
                         <div class="dot orange"></div>
-                        <h2 id="generator-title">🚑 GESTIONARE ECHIPAJ EPA</h2>
+                        <h2 id="generator-status-title">🚑 GESTIONARE ECHIPAJ EPA</h2>
                     </header>
                     
                     <div id="epa-creation-form" class="epa-form">
@@ -76,17 +83,10 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <label>Ora Start (Auto)</label>
-                                <input type="text" id="start-time-display" class="custom-select" placeholder="Ora se pune automat" disabled>
+                                <label>Vehicul Alocat</label>
+                                <select id="vehicle-select" class="custom-select">
+                                    </select>
                             </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Vehicul Alocat</label>
-                            <select id="vehicle-select" class="custom-select">
-                                <option value="Bravado Ambulance">Bravado Ambulance</option>
-                                <option value="Vapid Speedo">Vapid Speedo</option>
-                                <option value="Brute Ambulance">Brute Ambulance</option>
-                            </select>
                         </div>
                         <button class="submit-btn" onclick="generateEPA()">LANSEAZĂ ECHIPAJ</button>
                     </div>
@@ -114,18 +114,30 @@
                     </div>
                 </div>
 
+                <div id="section-rules" class="glass-panel section-content" style="display:none;">
+                    <header class="panel-header"><div class="dot orange"></div><h2>📜 REGULAMENT REPARTIZARE</h2></header>
+                    <div class="rules-scrollable" style="padding: 20px; text-align: left;">
+                        <p><strong>1.</strong> Repartizarea se face doar când sunt în tură 8 echipaje cu RADIO și BLS. Altfel, se preiau apeluri de peste tot.</p>
+                        <p><strong>2.</strong> Medicii Specialiști [200]+ au obligația de a împărți unitățile pe zonă!</p>
+                        <p><strong>3.</strong> Unitățile care intră după repartizare trebuie să solicite zonă pe dispecer!</p>
+                        <p style="color: #ff4d4d;"><strong>4. INTERZISĂ</strong> preluarea apelurilor în zonele încercuite și pe drumul marcat cu roșu.</p>
+                    </div>
+                </div>
+
+                <div id="section-map" class="glass-panel section-content" style="display:none;">
+                    <header class="panel-header"><div class="dot blue"></div><h2>🗺️ HARTĂ ZONE</h2></header>
+                    <div style="padding: 20px;"><img src="harta_repartizare.png" style="width: 100%; border-radius: 10px;"></div>
+                </div>
+
                 <div id="section-active" class="glass-panel section-content">
-                    <header class="panel-header">
-                        <div class="dot green"></div>
-                        <h2>📡 RADAR ECHIPAJE ACTIVE</h2>
-                    </header>
+                    <header class="panel-header"><div class="dot green"></div><h2>📡 RADAR ECHIPAJE</h2></header>
                     <div id="epa-list" class="epa-grid"></div>
                 </div>
 
-                </section>
+            </section>
         </main>
     </div>
-    
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>

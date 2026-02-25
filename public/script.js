@@ -1,9 +1,18 @@
 /* ================= STATE & CONFIG ================= */
+// LISTA VEHICULE (Adăugată conform cerinței)
+const VEHICLE_LIST = [
+    "Bravado Ambulance", "Vapid Speedo", "Brute Ambulance", "Declasse Granger",
+    "Pfister Comet", "Dundreary Stalker", "Dundreary Landstalker", "Bravado Gresley",
+    "Vapid Caracara", "Bravado Buffalo STX", "DMLS Ratchet", "Manchez",
+    "Buckingham Swift", "Buckingham Supervolito", "Gallivanter Baller"
+];
+
 let epaStorage = [];
 let myEPA = null;
 let timerInterval = null;
 let currentEditField = ""; 
 let syncTimeout = null;
+let deleteTimeout = null; // Pentru numărătoarea de 15 secunde
 
 // Identificator unic per browser pentru a diferenția utilizatorii
 let myID = localStorage.getItem('epa_user_id') || 'U-' + Math.floor(Math.random() * 9000 + 1000);
@@ -23,14 +32,62 @@ if (typeof io !== "undefined") {
     });
 }
 
+/* ================= SISTEM NOTIFICĂRI CU SUNET ================= */
+function showNotify(text, type) {
+    // REDARE SUNET DIN HTML
+    const alertAudio = document.getElementById('alert-sound');
+    if (alertAudio) {
+        alertAudio.currentTime = 0;
+        alertAudio.play().catch(e => console.warn("Audio block:", e));
+    }
+
+    const n = document.createElement("div");
+    n.className = `notify-box notify-${type}`;
+    n.style = `position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 800; z-index: 10000; background: ${type === 'bad' ? '#ff4d4d' : '#4caf50'}; border-left: 5px solid rgba(0,0,0,0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s ease;`;
+    n.innerText = text;
+    document.body.appendChild(n);
+    setTimeout(() => { n.style.opacity = "0"; setTimeout(() => n.remove(), 500); }, 4000);
+}
+
+/* ================= RESTRICȚIE: VERIFICARE STAFF ACTIV ================= */
+function checkStaffSafety() {
+    if (!myEPA) return;
+
+    // RESTRICȚIE 2: Verifică dacă ești singur (Tu + 0 parteneri)
+    if (myEPA.partners.length === 0) {
+        if (!deleteTimeout) {
+            showNotify("⚠️ Ești singur! Ai 15 secunde să adaugi un partener sau EPA se șterge!", "bad");
+            deleteTimeout = setTimeout(() => {
+                if (myEPA && myEPA.partners.length === 0) {
+                    showNotify("EPA șters automat: Lipsă personal minim.", "bad");
+                    processClockOut();
+                }
+            }, 15000);
+        }
+    } else {
+        if (deleteTimeout) {
+            clearTimeout(deleteTimeout);
+            deleteTimeout = null;
+            showNotify("Personal minim detectat. Ștergerea a fost anulată.", "good");
+        }
+    }
+}
+
 /* ================= INIT ================= */
 window.onload = async () => {
+    // POPULARE LISTĂ VEHICULE ÎN SELECT (Adăugat conform cerinței)
+    const vehicleSelect = document.getElementById('vehicle-select');
+    if (vehicleSelect) {
+        vehicleSelect.innerHTML = VEHICLE_LIST.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
     // Încărcăm datele noastre din browser
     const localData = localStorage.getItem('my_active_epa');
     if (localData) {
         myEPA = JSON.parse(localData);
         renderControlPanel();
         startTimer();
+        checkStaffSafety(); // Verificăm statusul la load
     }
     
     // Deschidem direct radarul
@@ -81,10 +138,19 @@ async function generateEPA() {
     const zone = document.getElementById('zone-select').value;
     const vehicle = document.getElementById('vehicle-select').value;
 
-    if (!creator) return alert("Introdu Callsign-ul!");
+    if (!creator) return showNotify("Eroare: Introdu Callsign-ul tău!", "bad");
+
+    // RESTRICȚIE 1: Minim 2 persoane, Maxim 3 (Tu + parteneri)
+    let partnersList = partners.split(',').map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
+    
+    if (partnersList.length === 0) {
+        return showNotify("Restricție: Trebuie să ai minim 1 partener (Echipaj de 2)!", "bad");
+    }
+    if (partnersList.length > 2) {
+        return showNotify("Restricție: Maxim 3 persoane permise într-un EPA!", "bad");
+    }
 
     const oraStart = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-    let partnersList = partners.split(',').map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
 
     myEPA = {
         ownerID: myID,
@@ -103,6 +169,7 @@ async function generateEPA() {
     // Trimitem prin WebSockets ca toată lumea să vadă noul EPA instant
     if (socket) socket.emit("epa_launch", myEPA);
 
+    showNotify("Echipaj EPA lansat cu succes!", "good"); // Adăugat pentru sunet la start
     renderControlPanel();
     startTimer();
     showSection("active");
@@ -180,6 +247,17 @@ function editField(field) {
     const overlay = document.getElementById("custom-edit-overlay");
     const input = document.getElementById("edit-input");
     
+    // RESTRICȚIE 3: Adăugăm câmp de motiv dacă nu există în overlay-ul tău din HTML
+    let reasonInput = document.getElementById("edit-reason");
+    if (!reasonInput) {
+        const group = document.createElement("div");
+        group.className = "input-group";
+        group.innerHTML = `<label>MOTIV MODIFICARE</label><input type="text" id="edit-reason" placeholder="Ex: Redislocare / Pană">`;
+        input.parentNode.after(group);
+        reasonInput = document.getElementById("edit-reason");
+    }
+    reasonInput.value = ""; // Reset motiv
+    
     document.getElementById("edit-title").innerText = "MODIFICĂ " + field.toUpperCase();
     input.value = (field === "partners") ? myEPA.partners.join(",").replace(/M-/g, "") : myEPA[field];
     
@@ -187,20 +265,30 @@ function editField(field) {
     
     document.getElementById("save-edit-btn").onclick = () => {
         const val = input.value;
+        const reason = reasonInput.value;
         const now = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
         
+        // RESTRICȚIE 3: Motivul este obligatoriu
+        if (!reason || reason.length < 3) {
+            return showNotify("Eroare: Trebuie să scrii un motiv pentru acest edit!", "bad");
+        }
+        
         if (currentEditField === "partners") {
-            myEPA.partners = val.split(",").map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
+            let newList = val.split(",").map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
+            if (newList.length > 2) return showNotify("Maxim 3 persoane!", "bad");
+            myEPA.partners = newList;
         } else {
             myEPA[currentEditField] = val;
         }
         
-        myEPA.logs.push(`[${now}] ${currentEditField.toUpperCase()} actualizat.`);
+        myEPA.logs.push(`[${now}] ${currentEditField.toUpperCase()} actualizat. Motiv: ${reason}`);
         localStorage.setItem("my_active_epa", JSON.stringify(myEPA));
         
         // Trimitem update-ul și pe server/websocket
         if (socket) socket.emit("epa_launch", myEPA);
         
+        showNotify("Modificare salvată!", "good"); // Sunet la salvare reușită
+        checkStaffSafety(); // Verificăm dacă noul edit te-a lăsat singur
         renderControlPanel();
         closeEdit();
     };
