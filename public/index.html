@@ -9,7 +9,7 @@
 <body class="maintenance-body">
 
     <audio id="bgMusic" loop>
-        <source src="tropez.mp3" type="audio/mpeg">
+        <source src="binema.mp3" type="audio/mpeg">
     </audio>
 
     <div class="maintenance-card">
@@ -33,9 +33,13 @@
         <div class="music-player-card">
             <div class="player-info">
                 <span class="music-label">SUNET FUNDAL</span>
-                <span class="track-name">Florin Salam - Saint Tropez</span>
+                <span class="track-name">Florin Salam, Tzanca Uraganu' si Mr Juve - Bine ma...</span>
             </div>
             <div class="player-controls">
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5">
+                </div>
                 <button id="playBtn" onclick="toggleMusic()">▶</button>
             </div>
         </div>
@@ -58,6 +62,10 @@
         // --- LOGICĂ MUZICĂ ---
         const music = document.getElementById("bgMusic");
         const playBtn = document.getElementById("playBtn");
+        const volumeSlider = document.getElementById("volumeSlider");
+
+        // Setăm volumul inițial
+        music.volume = volumeSlider.value;
 
         function toggleMusic() {
             if (music.paused) {
@@ -68,6 +76,11 @@
                 playBtn.innerText = "▶";
             }
         }
+
+        // Event listener pentru slider-ul de volum
+        volumeSlider.addEventListener("input", (e) => {
+            music.volume = e.target.value;
+        });
 
         // --- LOGICĂ TIMER ---
         const targetDate = new Date("March 3, 2026 00:00:00").getTime();

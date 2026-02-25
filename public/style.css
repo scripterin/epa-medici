@@ -997,3 +997,45 @@ body.ghid-body {
 #playBtn:active {
     transform: scale(0.95);
 }
+
+/* Containerul de controale (buton + volum) */
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Container Volum */
+.volume-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 100px;
+}
+
+.volume-icon {
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+
+/* Stil Slider Volum */
+#volumeSlider {
+    -webkit-appearance: none;
+    width: 60px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #00f2ff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
