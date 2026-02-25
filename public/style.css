@@ -6,27 +6,27 @@
 body.ghid-body {
     margin: 0;
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('image.png');
+    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('background-medici.png');
     background-size: cover;
     background-attachment: fixed;
     color: white;
     overflow-x: hidden;
 }
 
-/* --- NAVBAR CAPSULĂ --- */
+/* --- NAVBAR CAPSULĂ FIXATĂ --- */
 .navbar-capsule {
-    position: fixed;
-    top: 50px;
+    position: fixed; /* Rămâne fixat pe ecran */
+    top: 20px;       /* Am scăzut de la 50px la 20px pentru a nu ocupa prea mult spațiu inutil */
     left: 50%;
     transform: translateX(-50%);
     width: fit-content;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(15, 23, 42, 0.85); /* Am crescut opacitatea pentru contrast la scroll */
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 100px;
     padding: 8px 12px;
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 99999;  /* Valoare foarte mare pentru a fi sigur că stă peste absolut orice */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8); /* Umbră mai intensă pentru separare vizuală */
 }
 
 .nav-content {
@@ -51,8 +51,12 @@ body.ghid-body {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.nav-content .btn-active {
+    background: rgba(255, 255, 255, 0.15); /* Să se vadă clar butonul apăsat */
+}
+
 .nav-content .btn-active:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 /* --- PANELURI GLASSMORPHISM --- */
@@ -489,114 +493,130 @@ body.ghid-body {
     }
 }
 
-/* --- STIL MODAL CLOCK-OUT (DESIGN MODERN CYBER-MEDICAL) --- */
+/* --- STIL MODAL CLOCK-OUT (ULTRA-MODERN TACTICAL) --- */
 
 #clockout-overlay .edit-modal {
     max-width: 420px;
-    background: rgba(15, 15, 15, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 77, 77, 0.4);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 77, 77, 0.1);
+    background: rgba(13, 13, 15, 0.9); /* Fundal închis semi-transparent */
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
     position: relative;
+    padding: 35px;
+    border-radius: 28px;
     overflow: hidden;
 }
 
-/* Indicator vizual în partea de sus pentru urgență/finalizare */
+/* Efect de strălucire pe marginea de sus */
 #clockout-overlay .edit-modal::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
     background: linear-gradient(90deg, transparent, #ff4d4d, transparent);
 }
 
 #clockout-overlay h3 {
     font-weight: 900;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    font-size: 1.2rem;
     text-transform: uppercase;
-    background: linear-gradient(to bottom, #fff, #ff4d4d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #fff;
+    text-align: center;
     margin-bottom: 25px;
+    opacity: 0.9;
 }
 
-/* Containerul de sumar cu aspect de card High-Tech */
+/* Containerul de sumar - Stil Card High-Tech */
 .summary-box {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-    padding: 20px;
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 24px;
+    border-radius: 20px;
     margin: 20px 0;
-    text-align: left;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .summary-box div {
     font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
-    margin: 8px 0;
     color: rgba(255, 255, 255, 0.5);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* Valorile din sumar */
 .summary-box div span {
-    color: rgba(255, 255, 255, 0.9);
+    color: #fff;
     font-weight: 600;
-    font-family: 'Courier New', monospace; /* Aspect de terminal medical */
+    font-family: 'JetBrains Mono', monospace; /* Aspect de terminal pentru cifre */
 }
 
-/* Evidențiere timp total - Stil Badge */
+/* Evidențiere TIMP TOTAL - Accent Neon */
 #summary-total {
-    color: #fff !important;
-    background: rgba(255, 166, 0, 0.15);
-    padding: 12px;
-    border-radius: 8px;
+    color: #ffb800 !important; /* Galben Cyberpunk */
+    background: rgba(255, 184, 0, 0.08) !important;
+    padding: 18px;
+    border-radius: 14px;
     font-weight: 900;
-    font-size: 1.2rem !important;
-    margin-top: 15px !important;
-    border: 1px solid rgba(255, 166, 0, 0.3) !important;
+    font-size: 1.6rem !important;
+    margin-top: 10px !important;
+    border: 1px solid rgba(255, 184, 0, 0.2) !important;
     justify-content: center !important;
-    text-shadow: 0 0 10px rgba(255, 166, 0, 0.5);
+    text-shadow: 0 0 15px rgba(255, 184, 0, 0.3);
 }
 
-/* Butonul de confirmare finală - Red Glow */
+/* Grupare butoane acțiune */
+.edit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+/* Butonul Confirmare (Închide Tura) */
 #confirm-clockout-btn {
     background: #ff4d4d;
     color: white;
-    font-weight: 900;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    padding: 14px;
-    border-radius: 10px;
+    padding: 16px;
+    border-radius: 16px;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 20px -6px rgba(255, 77, 77, 0.5);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 #confirm-clockout-btn:hover {
-    background: #ff1a1a;
-    transform: scale(1.02);
-    box-shadow: 0 0 25px rgba(255, 77, 77, 0.6);
+    background: #ff3333;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px -5px rgba(255, 77, 77, 0.7);
 }
 
-/* Butonul de anulare - Stil Minimalist */
+/* Butonul Anulare - Stil Text Discret */
 .edit-btn-cancel {
     background: transparent;
-    color: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.3);
+    border: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .edit-btn-cancel:hover {
     color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
+    opacity: 0.8;
 }
 
 /* --- UI RADAR ECHIPAJE ACTIVE --- */

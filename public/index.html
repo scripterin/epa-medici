@@ -16,11 +16,11 @@
             <h3 id="edit-title">MODIFICARE DATE</h3>
             <div class="input-group">
                 <label>Valoare Nouă</label>
-                <input type="text" id="edit-input" placeholder="Introdu valoarea nouă...">
+                <input type="text" id="edit-input" placeholder="Introdu motivul">
             </div>
             <div class="input-group">
                 <label>Motivul Modificării</label>
-                <input type="text" id="edit-reason" placeholder="Ex: Redislocare / Pană vehicul">
+                <input type="text" id="edit-reason" placeholder="Introdu motivul">
             </div>
             <div class="edit-actions">
                 <button class="edit-btn-cancel" onclick="closeEdit()">ANULEAZĂ</button>
@@ -29,20 +29,30 @@
         </div>
     </div>
 
-    <div id="clockout-overlay" class="edit-overlay" style="display: none;">
-        <div class="edit-modal" style="border-color: #ff4d4d;">
-            <h3 style="color: #ff4d4d;">SUMAR FINAL TURĂ</h3>
-            <div id="summary-content" class="summary-details" style="margin: 20px 0; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
-                <p id="summary-start">START: --:--</p>
-                <p id="summary-final">FINAL: --:--</p>
-                <p id="summary-total" style="font-weight: 800; color: #fff; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">TOTAL: 0 minute</p>
+<div id="clockout-overlay" class="edit-overlay">
+    <div class="edit-modal">
+        <h3>Sumar Final Tură</h3>
+        
+        <div id="summary-content" class="summary-box">
+            <div class="summary-item">
+                <label>Start Ora:</label>
+                <span id="summary-start">--:--</span>
             </div>
-            <div class="edit-actions">
-                <button class="edit-btn-cancel" onclick="closeClockOut()">ANULEAZĂ</button>
-                <button class="edit-btn-save" id="confirm-clockout-btn" style="background: #ff4d4d;">ÎNCHIDE TURA</button>
+            <div class="summary-item">
+                <label>Final Ora:</label>
+                <span id="summary-final">--:--</span>
+            </div>
+            <div id="summary-total">
+                TOTAL: 0 MINUTE
             </div>
         </div>
+
+        <div class="edit-actions">
+            <button id="confirm-clockout-btn">Închide Tura</button>
+            <button class="edit-btn-cancel" onclick="closeClockOut()">Anulează</button>
+        </div>
     </div>
+</div>
 
     <div id="main-ui">
         <nav class="navbar-capsule">
