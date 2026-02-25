@@ -1,4 +1,5 @@
 /* ================= STATE & CONFIG ================= */
+// LISTA VEHICULE (Adăugată conform cerinței)
 const VEHICLE_LIST = [
     "Bravado Ambulance", "Vapid Speedo", "Brute Ambulance", "Declasse Granger",
     "Pfister Comet", "Dundreary Stalker", "Dundreary Landstalker", "Bravado Gresley",
@@ -10,10 +11,26 @@ let epaStorage = [];
 let myEPA = null;
 let timerInterval = null;
 let currentEditField = ""; 
-let deleteTimeout = null;
+let syncTimeout = null;
+let deleteTimeout = null; // Pentru numărătoarea de 15 secunde
 
+// Identificator unic per browser pentru a diferenția utilizatorii
 let myID = localStorage.getItem('epa_user_id') || 'U-' + Math.floor(Math.random() * 9000 + 1000);
 localStorage.setItem('epa_user_id', myID);
+
+/* ================= SOCKET.IO (REAL-TIME) ================= */
+// Conectare la server - asigură-te că ai <script src="/socket.io/socket.io.js"></script> în HTML
+let socket = null;
+if (typeof io !== "undefined") {
+    socket = io();
+
+    // Ascultăm când serverul trimite lista actualizată către TOATĂ LUMEA
+    socket.on("update_global_list", (data) => {
+        console.log("Radar actualizat via WebSocket");
+        epaStorage = data || [];
+        renderActiveRadar();
+    });
+}
 
 /* ================= SISTEM NOTIFICĂRI ================= */
 function showNotify(text, type) {
@@ -25,9 +42,11 @@ function showNotify(text, type) {
     setTimeout(() => { n.style.opacity = "0"; setTimeout(() => n.remove(), 500); }, 4000);
 }
 
-/* ================= RESTRICȚIE: STAFF MINIM ================= */
+/* ================= RESTRICȚIE: VERIFICARE STAFF ACTIV ================= */
 function checkStaffSafety() {
     if (!myEPA) return;
+
+    // RESTRICȚIE 2: Verifică dacă ești singur (Tu + 0 parteneri)
     if (myEPA.partners.length === 0) {
         if (!deleteTimeout) {
             showNotify("⚠️ Ești singur! Ai 15 secunde să adaugi un partener sau EPA se șterge!", "bad");
@@ -49,49 +68,43 @@ function checkStaffSafety() {
 
 /* ================= INIT ================= */
 window.onload = async () => {
+    // POPULARE LISTĂ VEHICULE ÎN SELECT (Adăugat conform cerinței)
     const vehicleSelect = document.getElementById('vehicle-select');
     if (vehicleSelect) {
         vehicleSelect.innerHTML = VEHICLE_LIST.map(v => `<option value="${v}">${v}</option>`).join('');
     }
 
+    // Încărcăm datele noastre din browser
     const localData = localStorage.getItem('my_active_epa');
     if (localData) {
         myEPA = JSON.parse(localData);
         renderControlPanel();
         startTimer();
-        checkStaffSafety();
-        syncWithServer(); // Trimitem puls către server să știe că suntem activi
+        checkStaffSafety(); // Verificăm statusul la load
     }
     
+    // Deschidem direct radarul
     showSection('active');
+    
+    // Luăm datele inițiale de pe server
     await fetchGlobalData();
-    setInterval(fetchGlobalData, 7000); // Polling la 7 secunde pentru radar
+    
+    // Verificare periodică (fallback în caz că pică socket-ul)
+    setInterval(fetchGlobalData, 15000);
 };
 
-/* ================= COMUNICARE SERVER (FETCH ÎN LOC DE SOCKET) ================= */
-
-// Cere lista de la MongoDB
+/* ================= FETCH DATA (RADAR) ================= */
 async function fetchGlobalData() {
     try {
         const res = await fetch("/api/epa/active-list");
         if (res.ok) {
             const data = await res.json();
             epaStorage = Array.isArray(data) ? data : [];
-            renderActiveRadar();
         }
-    } catch (e) { console.warn("Eroare radar."); }
-}
-
-// Trimite datele noastre către MongoDB
-async function syncWithServer() {
-    if (!myEPA) return;
-    try {
-        await fetch("/api/epa/update", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(myEPA)
-        });
-    } catch (e) { console.error("Eroare sincronizare server."); }
+    } catch (e) {
+        console.warn("Eroare la fetch global (404/500).");
+    }
+    renderActiveRadar();
 }
 
 /* ================= NAVIGARE ================= */
@@ -100,12 +113,14 @@ function showSection(sectionId) {
     const target = document.getElementById("section-" + sectionId);
     if (target) target.style.display = "block";
 
+    // Actualizare stil butoane navigație
     document.querySelectorAll(".nav-content button").forEach(b => {
         b.classList.remove("btn-active");
-        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(sectionId)) {
+        if (b.getAttribute('onclick').includes(sectionId)) {
             b.classList.add("btn-active");
         }
     });
+
     if (sectionId === 'active') fetchGlobalData();
 }
 
@@ -118,9 +133,15 @@ async function generateEPA() {
 
     if (!creator) return showNotify("Eroare: Introdu Callsign-ul tău!", "bad");
 
+    // RESTRICȚIE 1: Minim 2 persoane, Maxim 3 (Tu + parteneri)
     let partnersList = partners.split(',').map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
-    if (partnersList.length === 0) return showNotify("Minim 1 partener necesar!", "bad");
-    if (partnersList.length > 2) return showNotify("Maxim 3 persoane permise!", "bad");
+    
+    if (partnersList.length === 0) {
+        return showNotify("Restricție: Trebuie să ai minim 1 partener (Echipaj de 2)!", "bad");
+    }
+    if (partnersList.length > 2) {
+        return showNotify("Restricție: Maxim 3 persoane permise într-un EPA!", "bad");
+    }
 
     const oraStart = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 
@@ -137,12 +158,13 @@ async function generateEPA() {
     };
 
     localStorage.setItem("my_active_epa", JSON.stringify(myEPA));
-    await syncWithServer(); // Salvează în MongoDB
     
+    // Trimitem prin WebSockets ca toată lumea să vadă noul EPA instant
+    if (socket) socket.emit("epa_launch", myEPA);
+
     renderControlPanel();
     startTimer();
     showSection("active");
-    fetchGlobalData();
 }
 
 /* ================= RANDARE RADAR ================= */
@@ -150,7 +172,17 @@ function renderActiveRadar() {
     const container = document.getElementById("epa-list");
     if (!container) return;
 
+    // "Local First": Combinăm lista de la server cu propriul EPA ca să nu vedem radarul gol
     let displayList = [...epaStorage];
+    if (myEPA && !displayList.find(e => e.ownerID === myID)) {
+        displayList.push(myEPA);
+    }
+
+    if (displayList.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666;">NU SUNT ECHIPAJE ACTIVE</div>`;
+        return;
+    }
+
     container.innerHTML = displayList.map(epa => `
         <div class="epa-card ${epa.ownerID === myID ? "my-card-highlight" : ""}" onclick="toggleCardDetails(this)">
             <div class="card-tag">${epa.zone}</div>
@@ -167,11 +199,12 @@ function renderActiveRadar() {
 /* ================= TIMER & CONTROL ================= */
 function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
+    
     let timerElem = document.getElementById("live-clock");
     if (!timerElem) {
         timerElem = document.createElement("div");
         timerElem.id = "live-clock";
-        timerElem.style = "text-align: center; color: #ffb800; font-weight: 900; margin-bottom: 20px; font-size: 1.4rem; text-shadow: 0 0 10px rgba(255,184,0,0.3);";
+        timerElem.style = "text-align: center; color: #ff9800; font-weight: 900; margin-bottom: 20px; font-size: 1.4rem;";
         document.getElementById("epa-active-control").prepend(timerElem);
     }
 
@@ -188,6 +221,7 @@ function startTimer() {
 function renderControlPanel() {
     document.getElementById("epa-creation-form").style.display = "none";
     document.getElementById("epa-active-control").style.display = "block";
+    
     document.getElementById("display-zone").innerText = myEPA.zone;
     document.getElementById("display-vehicle").innerText = myEPA.vehicle;
     document.getElementById("display-partners").innerText = myEPA.partners.join(", ") || "Singur";
@@ -204,20 +238,32 @@ function editField(field) {
     currentEditField = field;
     const overlay = document.getElementById("custom-edit-overlay");
     const input = document.getElementById("edit-input");
-    const reasonInput = document.getElementById("edit-reason");
     
-    reasonInput.value = ""; 
+    // RESTRICȚIE 3: Adăugăm câmp de motiv dacă nu există în overlay-ul tău din HTML
+    let reasonInput = document.getElementById("edit-reason");
+    if (!reasonInput) {
+        const group = document.createElement("div");
+        group.className = "input-group";
+        group.innerHTML = `<label>MOTIV MODIFICARE</label><input type="text" id="edit-reason" placeholder="Ex: Redislocare / Pană">`;
+        input.parentNode.after(group);
+        reasonInput = document.getElementById("edit-reason");
+    }
+    reasonInput.value = ""; // Reset motiv
+    
     document.getElementById("edit-title").innerText = "MODIFICĂ " + field.toUpperCase();
     input.value = (field === "partners") ? myEPA.partners.join(",").replace(/M-/g, "") : myEPA[field];
     
     overlay.style.display = "flex";
     
-    document.getElementById("save-edit-btn").onclick = async () => {
+    document.getElementById("save-edit-btn").onclick = () => {
         const val = input.value;
         const reason = reasonInput.value;
         const now = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
         
-        if (!reason || reason.length < 3) return showNotify("Eroare: Scrie un motiv!", "bad");
+        // RESTRICȚIE 3: Motivul este obligatoriu
+        if (!reason || reason.length < 3) {
+            return showNotify("Eroare: Trebuie să scrii un motiv pentru acest edit!", "bad");
+        }
         
         if (currentEditField === "partners") {
             let newList = val.split(",").map(p => p.trim()).filter(p => p).map(p => `M-${p}`);
@@ -230,12 +276,12 @@ function editField(field) {
         myEPA.logs.push(`[${now}] ${currentEditField.toUpperCase()} actualizat. Motiv: ${reason}`);
         localStorage.setItem("my_active_epa", JSON.stringify(myEPA));
         
-        await syncWithServer(); // Sincronizăm cu MongoDB
+        // Trimitem update-ul și pe server/websocket
+        if (socket) socket.emit("epa_launch", myEPA);
         
-        checkStaffSafety();
+        checkStaffSafety(); // Verificăm dacă noul edit te-a lăsat singur
         renderControlPanel();
         closeEdit();
-        fetchGlobalData();
     };
 }
 
@@ -244,18 +290,18 @@ function closeEdit() { document.getElementById("custom-edit-overlay").style.disp
 function confirmClockOut() {
     if (!myEPA) return;
     const diffMin = Math.floor((Date.now() - myEPA.startTimestamp) / 60000);
-    document.getElementById("summary-start").querySelector('span').innerText = myEPA.startTime;
-    document.getElementById("summary-final").querySelector('span').innerText = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById("summary-start").innerHTML = `START: <span>${myEPA.startTime}</span>`;
+    document.getElementById("summary-final").innerHTML = `FINAL: <span>${new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</span>`;
     document.getElementById("summary-total").innerText = `TOTAL: ${diffMin} MINUTE`;
     document.getElementById("clockout-overlay").style.display = "flex";
 }
 
+function closeClockOut() { document.getElementById("clockout-overlay").style.display = "none"; }
+
 async function processClockOut() {
-    try {
-        await fetch(`/api/epa/close/${myID}`, { method: 'DELETE' });
-        localStorage.removeItem("my_active_epa");
-        location.reload();
-    } catch (e) { showNotify("Eroare la închidere.", "bad"); }
+    if (socket) socket.emit("epa_close", myID);
+    localStorage.removeItem("my_active_epa");
+    location.reload();
 }
 
 function toggleCardDetails(card) {
@@ -263,12 +309,12 @@ function toggleCardDetails(card) {
     if (content) content.style.display = content.style.display === "none" ? "block" : "none";
 }
 
-/* ================= EXPORT ================= */
+/* ================= EXPORT PENTRU HTML ================= */
 window.showSection = showSection;
 window.generateEPA = generateEPA;
 window.editField = editField;
 window.closeEdit = closeEdit;
 window.confirmClockOut = confirmClockOut;
-window.closeClockOut = () => document.getElementById("clockout-overlay").style.display = "none";
+window.closeClockOut = closeClockOut;
 window.toggleCardDetails = toggleCardDetails;
 document.getElementById("confirm-clockout-btn").onclick = processClockOut;

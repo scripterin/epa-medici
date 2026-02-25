@@ -720,3 +720,209 @@ body.ghid-body {
     border: 2px dashed rgba(255, 255, 255, 0.05);
     border-radius: 20px;
 }
+
+/* =========================================
+   STIL PAGINĂ ANUNȚ (MENTENANȚĂ & PLOAIE)
+   ========================================= */
+
+:root {
+    --primary-neon: #00f2ff;
+    --medical-orange: #ffb800;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Fundalul negru profund pentru a scoate în evidență ploaia */
+.maintenance-body {
+    background: #050a0f !important;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Canvas-ul pentru efectul de ploaie */
+#rainCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none; /* Să nu blocheze click-urile */
+}
+
+/* Cardul Central Glassmorphism */
+.maintenance-card {
+    position: relative;
+    z-index: 10;
+    background: var(--glass-bg);
+    backdrop-filter: blur(25px) saturate(150%);
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px;
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 550px;
+    width: 90%;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+}
+
+/* Efectul de strălucire sub card */
+.maintenance-card::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 10%;
+    width: 80%;
+    height: 40px;
+    background: var(--primary-neon);
+    filter: blur(60px);
+    opacity: 0.15;
+    z-index: -1;
+}
+
+/* Iconița de stare pulsatorie */
+.status-icon-box {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 30px;
+    background: rgba(0, 242, 255, 0.05);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.medical-symbol {
+    font-size: 2.8rem;
+    filter: drop-shadow(0 0 10px var(--primary-neon));
+}
+
+.pulse-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary-neon);
+    border-radius: 24px;
+    animation: medicalPulse 2.5s infinite;
+}
+
+/* Textul principal */
+.maintenance-card h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 15px;
+    background: linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.6));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.maintenance-card p {
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    font-size: 1.05rem;
+}
+
+/* Bara de Progres "Working..." */
+.work-progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.work-progress-bar {
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--primary-neon), transparent);
+    animation: slideLoader 2.5s infinite ease-in-out;
+}
+
+/* Label-uri mici (Badges) */
+.system-tags {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.tag-item {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--medical-orange);
+    padding: 6px 14px;
+    background: rgba(255, 184, 0, 0.05);
+    border: 1px solid rgba(255, 184, 0, 0.15);
+    border-radius: 100px;
+}
+
+/* Animații */
+@keyframes medicalPulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(0.95); opacity: 0; }
+}
+
+@keyframes slideLoader {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(250%); }
+}
+
+.contact-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.contact-footer span {
+    color: #00f2ff; /* Culoarea neon pentru a ieși în evidență user-ul */
+    font-weight: 700;
+    margin-left: 5px;
+}
+
+/* Stil Countdown */
+#countdown-timer {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 30px 0;
+    font-family: 'JetBrains Mono', monospace; /* Sau orice font monospaced */
+}
+
+.time-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 12px;
+    min-width: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.time-unit span {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #00f2ff;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+}
+
+.time-unit label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 5px;
+    letter-spacing: 1px;
+}
