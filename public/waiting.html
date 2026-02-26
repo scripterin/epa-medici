@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentenanță | Eclipse Medical</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="maintenance-body">
+
+    <div class="maintenance-card">
+        <div class="status-icon-box">
+            <div class="pulse-effect"></div>
+            <span class="medical-symbol">🚑</span>
+        </div>
+        
+        <h1>SISTEM ÎN LUCRU</h1>
+        <p>
+            Mentenanța periodică a <strong>aplicației EPA</strong> este în desfășurare pentru optimizarea fluxului operațional din cadrul <strong>Eclipse Medical Tower</strong>. 
+        </p>
+
+        <div id="countdown-timer">
+            <div class="time-unit"><span id="days">00</span><label>Zile</label></div>
+            <div class="time-unit"><span id="hours">00</span><label>Ore</label></div>
+            <div class="time-unit"><span id="minutes">00</span><label>Min</label></div>
+            <div class="time-unit"><span id="seconds">00</span><label>Sec</label></div>
+        </div>
+
+        <div class="work-progress-container">
+            <div class="work-progress-bar"></div>
+        </div>
+
+        <div class="system-tags">
+            <span class="tag-item">DATABASE SYNC</span>
+            <span class="tag-item">V3.0 OPTIMIZATION</span>
+        </div>
+
+        <div class="contact-footer">
+            Pentru orice informație suplimentară: <span>@padurice1</span>
+        </div>
+    </div>  
+
+    <script>
+
+        // --- LOGICĂ TIMER ---
+        const targetDate = new Date("March 3, 2026 00:00:00").getTime();
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.getElementById("countdown-timer").innerHTML = "<h2 style='color:#00f2ff'>SISTEM ONLINE</h2>";
+                return;
+            }
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = d.toString().padStart(2, '0');
+            document.getElementById("hours").innerText = h.toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = m.toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = s.toString().padStart(2, '0');
+        }
+
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>
