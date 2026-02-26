@@ -8,10 +8,6 @@
 </head>
 <body class="maintenance-body">
 
-    <audio id="bgMusic" loop>
-        <source src="lele.mp3" type="audio/mpeg">
-    </audio>
-
     <div class="maintenance-card">
         <div class="status-icon-box">
             <div class="pulse-effect"></div>
@@ -30,20 +26,6 @@
             <div class="time-unit"><span id="seconds">00</span><label>Sec</label></div>
         </div>
 
-        <div class="music-player-card">
-            <div class="player-info">
-                <span class="music-label">SUNET FUNDAL</span>
-                <span class="track-name">Lele - Peter Parker - Balkanic Version</span>
-            </div>
-            <div class="player-controls">
-                <div class="volume-container">
-                    <span class="volume-icon">🔊</span>
-                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5">
-                </div>
-                <button id="playBtn" onclick="toggleMusic()">▶</button>
-            </div>
-        </div>
-
         <div class="work-progress-container">
             <div class="work-progress-bar"></div>
         </div>
@@ -56,31 +38,9 @@
         <div class="contact-footer">
             Pentru orice informație suplimentară: <span>@padurice1</span>
         </div>
-    </div>
+    </div>  
 
     <script>
-        // --- LOGICĂ MUZICĂ ---
-        const music = document.getElementById("bgMusic");
-        const playBtn = document.getElementById("playBtn");
-        const volumeSlider = document.getElementById("volumeSlider");
-
-        // Setăm volumul inițial
-        music.volume = volumeSlider.value;
-
-        function toggleMusic() {
-            if (music.paused) {
-                music.play();
-                playBtn.innerText = "⏸";
-            } else {
-                music.pause();
-                playBtn.innerText = "▶";
-            }
-        }
-
-        // Event listener pentru slider-ul de volum
-        volumeSlider.addEventListener("input", (e) => {
-            music.volume = e.target.value;
-        });
 
         // --- LOGICĂ TIMER ---
         const targetDate = new Date("March 3, 2026 00:00:00").getTime();
